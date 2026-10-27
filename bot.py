@@ -3,10 +3,22 @@ from telebot import types
 import threading
 import time
 import os
+from flask import Flask
 
 # Безопасный забор токена из настроек сервера
 TOKEN = os.environ.get('TOKEN')
 bot = telebot.TeleBot(TOKEN)
+
+# --- ВЕБ-СЕРВЕР ДЛЯ RENDER (чтобы не ругался на порты) ---
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is alive!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
 
 # --- ГЛАВНОЕ МЕНЮ ---
 def get_main_keyboard():
@@ -165,5 +177,9 @@ def run_timer(user_id, delay, finish_message):
     bot.send_message(user_id, finish_message, parse_mode="Markdown")
 
 if __name__ == '__main__':
+    # Запускаем веб-сервер в отдельном потоке для Render
+    t = threading.Thread(target=run_web)
+    t.start()
+    
     print("Бот запущен...")
     bot.infinity_polling()
